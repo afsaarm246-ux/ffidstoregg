@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CUPCUT VPN</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
+}
+
+:root{
+    --red:#ef1b1b;
+    --green:#00e676;
+    --bg:#020303;
+    --card:#0d1010;
+}
+
+body{
+    min-height:100vh;
+    color:#fff;
+    background:
+        radial-gradient(circle at 50% 12%,#183b27 0%,transparent 27%),
+        radial-gradient(circle at 50% 55%,#07170e 0%,transparent 40%),
+        linear-gradient(145deg,#010202,#07100b 50%,#010202);
+    overflow-x:hidden;
+}
+
+/* GREEN VPN SERVER BACKGROUND */
+.server-grid{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    opacity:.45;
+    background:
+        linear-gradient(rgba(0,230,118,.055) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(0,230,118,.055) 1px,transparent 1px);
+    background-size:38px 38px;
+    mask-image:linear-gradient(to bottom,transparent,#000 18%,#000 82%,transparent);
+}
+
+.server-glow{
+    position:fixed;
+    width:330px;
+    height:330px;
+    left:50%;
+    top:35%;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    background:#00e6760c;
+    box-shadow:
+        0 0 100px #00e6760d,
+        inset 0 0 80px #00e6760b;
+    z-index:-1;
+    pointer-events:none;
+}
+
+.node{
+    position:fixed;
+    width:4px;
+    height:4px;
+    border-radius:50%;
+    background:#00e676;
+    box-shadow:0 0 10px #00e676;
+    opacity:.5;
+    animation:pulse 2s infinite alternate;
+    z-index:-1;
+}
+
+.node.n1{left:9%;top:30%}
+.node.n2{left:88%;top:25%;animation-delay:.4s}
+.node.n3{left:18%;top:72%;animation-delay:.8s}
+.node.n4{left:82%;top:68%;animation-delay:1.1s}
+.node.n5{left:50%;top:88%;animation-delay:1.5s}
+
+@keyframes pulse{
+    from{opacity:.15;transform:scale(.7)}
+    to{opacity:.9;transform:scale(1.5)}
+}
+
+.app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    margin:auto;
+    padding:20px 17px 35px;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:11px;
+}
+
+.logo{
+    width:52px;
+    height:52px;
+    border-radius:50%;
+    overflow:hidden;
+    background:#07140c;
+    border:1px solid #00e676;
+    box-shadow:0 0 23px #00e67635;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.logo img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.brand h1{
+    font-size:19px;
+    letter-spacing:1.5px;
+}
+
+.brand p{
+    color:#778078;
+    font-size:10px;
+    margin-top:4px;
+}
+
+.menu{
+    width:42px;
+    height:42px;
+    border-radius:13px;
+    border:1px solid #26312b;
+    background:#0b100d;
+    color:#fff;
+    font-size:22px;
+    cursor:pointer;
+}
+
+/* STATUS */
+.status{
+    text-align:center;
+}
+
+.status-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:7px 15px;
+    border-radius:30px;
+    background:#08100b;
+    border:1px solid #26382d;
+    color:#89928c;
+    font-size:11px;
+}
+
+.status-dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#68716b;
+}
+
+.status.connected .status-dot{
+    background:var(--green);
+    box-shadow:0 0 13px var(--green);
+}
+
+.status.connected .status-pill{
+    color:var(--green);
+    border-color:#00e67655;
+}
+
+/* CONNECT CIRCLE */
+.connect-area{
+    display:flex;
+    justify-content:center;
+    margin:30px 0 8px;
+}
+
+.connect-circle{
+    width:224px;
+    height:224px;
+    border-radius:50%;
+    padding:12px;
+    border:1px solid #144d2d;
+    background:
+        radial-gradient(circle,#092015,#050806 68%);
+    box-shadow:
+        0 0 45px #00e67615,
+        inset 0 0 45px #00e67610;
+    cursor:pointer;
+    transition:.4s;
+    -webkit-tap-highlight-color:transparent;
+}
+
+.connect-inner{
+    width:100%;
+    height:100%;
+    border-radius:50%;
+    border:2px solid #18854b;
+    background:
+        radial-gradient(circle,#0c2d1b,#030605 68%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    overflow:hidden;
+    transition:.4s;
+}
+
+/* POWER SYMBOL */
+.power-symbol{
+    position:relative;
+    width:56px;
+    height:56px;
+    border:5px solid #d9e0db;
+    border-top-color:transparent;
+    border-radius:50%;
+    margin-bottom:12px;
+    filter:drop-shadow(0 0 8px #ffffff44);
+}
+
+.power-symbol:before{
+    content:"";
+    position:absolute;
+    width:5px;
+    height:29px;
+    left:50%;
+    top:-6px;
+    transform:translateX(-50%);
+    border-radius:8px;
+    background:#d9e0db;
+}
+
+.connect-circle.connecting{
+    animation:ringPulse 1s infinite;
+}
+
+.connect-circle.connecting .power-symbol{
+    animation:powerSpin 1.1s linear infinite;
+}
+
+.connect-circle.active{
+    border-color:#00e676;
+    box-shadow:
+        0 0 55px #00e67635,
+        inset 0 0 50px #00e67618;
+}
+
+.connect-circle.active .connect-inner{
+    border-color:#00e676;
+    background:
+        radial-gradient(circle,#0b3a20,#020604 70%);
+}
+
+.connect-circle.active .power-symbol{
+    border-color:var(--green);
+    border-top-color:transparent;
+}
+
+.connect-circle.active .power-symbol:before{
+    background:var(--green);
+}
+
+@keyframes ringPulse{
+    50%{
+        box-shadow:
+            0 0 65px #00e67635,
+            inset 0 0 55px #00e67620;
+    }
+}
+
+@keyframes powerSpin{
+    to{transform:rotate(360deg)}
+}
+
+.tap{
+    font-size:17px;
+    font-weight:bold;
+    letter-spacing:1px;
+}
+
+.tap-sub{
+    color:#748078;
+    font-size:10px;
+    margin-top:6px;
+}
+
+.tap-count{
+    text-align:center;
+    color:#526058;
+    font-size:9px;
+    margin-bottom:20px;
+}
+
+/* SERVER */
+.title{
+    color:#778079;
+    font-size:10px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-bottom:9px;
+}
+
+.server{
+    padding:14px;
+    border-radius:17px;
+    background:linear-gradient(145deg,#101813,#080b09);
+    border:1px solid #24352b;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+}
+
+.server-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.flag{
+    width:45px;
+    height:45px;
+    border-radius:13px;
+    background:#121b15;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:25px;
+}
+
+.server-name{
+    font-size:14px;
+    font-weight:bold;
+}
+
+.server-sub{
+    color:#718078;
+    font-size:10px;
+    margin-top:4px;
+}
+
+.arrow{
+    color:#758078;
+    font-size:22px;
+}
+
+/* STATS */
+.stats{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:9px;
+    margin-top:13px;
+}
+
+.stat{
+    text-align:center;
+    background:#080d0a;
+    border:1px solid #1e2d24;
+    border-radius:15px;
+    padding:13px 5px;
+}
+
+.stat-icon{
+    font-size:17px;
+}
+
+.stat-value{
+    font-size:13px;
+    font-weight:bold;
+    margin-top:6px;
+}
+
+.stat-label{
+    color:#637069;
+    font-size:8px;
+    margin-top:3px;
+}
+
+/* INFO */
+.info{
+    margin-top:13px;
+    padding:13px 15px;
+    border-radius:16px;
+    background:#080d0a;
+    border:1px solid #1e2d24;
+}
+
+.row{
+    display:flex;
+    justify-content:space-between;
+    padding:7px 0;
+    font-size:10px;
+    color:#69756e;
+}
+
+.row span:last-child{
+    color:#d5ddd8;
+}
+
+/* MODALS */
+.modal,
+.settings-modal,
+.cupcut-popup{
+    position:fixed;
+    inset:0;
+    background:#000c;
+    backdrop-filter:blur(9px);
+    display:none;
+    z-index:30;
+}
+
+.modal.show,
+.settings-modal.show,
+.cupcut-popup.show{
+    display:flex;
+}
+
+.modal{
+    align-items:flex-end;
+    justify-content:center;
+}
+
+.modal-box{
+    width:100%;
+    max-width:480px;
+    max-height:82vh;
+    overflow:auto;
+    padding:21px 17px 30px;
+    border-radius:24px 24px 0 0;
+    background:#0b100d;
+    border:1px solid #293c30;
+    animation:up .3s ease;
+}
+
+@keyframes up{
+    from{transform:translateY(100%)}
+    to{transform:translateY(0)}
+}
+
+.modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:15px;
+}
+
+.modal-head h2{
+    font-size:17px;
+}
+
+.close{
+    width:37px;
+    height:37px;
+    border:0;
+    border-radius:11px;
+    background:#172019;
+    color:#fff;
+    font-size:20px;
+}
+
+/* SERVER OPTIONS */
+.option{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:13px;
+    margin-bottom:8px;
+    border-radius:15px;
+    background:#101712;
+    border:1px solid #203027;
+    color:#fff;
+    cursor:pointer;
+}
+
+.option.selected{
+    border-color:#00a957;
+    background:#092016;
+}
+
+.option-info{
+    flex:1;
+    text-align:left;
+}
+
+.option-info b{
+    font-size:13px;
+}
+
+.option-info small{
+    display:block;
+    color:#707c75;
+    margin-top:4px;
+}
+
+.option-ping{
+    color:#768079;
+    font-size:10px;
+}
+
+/* SETTINGS */
+.settings-modal{
+    align-items:flex-start;
+    justify-content:flex-end;
+}
+
+.settings-box{
+    width:300px;
+    height:100%;
+    padding:24px 18px;
+    background:#090d0a;
+    border-left:1px solid #27372d;
+    animation:side .3s ease;
+}
+
+@keyframes side{
+    from{transform:translateX(100%)}
+    to{transform:translateX(0)}
+}
+
+.setting-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:25px;
+}
+
+.setting-head h2{
+    font-size:18px;
+}
+
+.setting{
+    padding:15px 0;
+    border-bottom:1px solid #1d2821;
+}
+
+.setting-title{
+    font-size:13px;
+}
+
+.setting-desc{
+    color:#68736d;
+    font-size:10px;
+    margin-top:5px;
+    line-height:1.5;
+}
+
+.setting-btn{
+    width:100%;
+    margin-top:11px;
+    padding:11px;
+    border:1px solid #294234;
+    border-radius:11px;
+    background:#101a14;
+    color:#fff;
+    cursor:pointer;
+}
+
+.setting-btn.green{
+    border-color:#00a957;
+    color:#00e676;
+}
+
+/* CUPCUT POPUP */
+.cupcut-popup{
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+}
+
+.popup-card{
+    width:100%;
+    max-width:350px;
+    padding:27px 20px;
+    text-align:center;
+    border-radius:24px;
+    background:linear-gradient(145deg,#111812,#060806);
+    border:1px solid #00a957;
+    box-shadow:0 0 45px #00e67618;
+    animation:popup .3s ease;
+}
+
+@keyframes popup{
+    from{
+        opacity:0;
+        transform:scale(.85);
+    }
+    to{
+        opacity:1;
+        transform:scale(1);
+    }
+}
+
+.popup-logo{
+    width:67px;
+    height:67px;
+    margin:auto;
+    border-radius:50%;
+    overflow:hidden;
+    background:#07140c;
+    border:1px solid #00e676;
+}
+
+.popup-logo img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.popup-card h2{
+    margin-top:16px;
+    font-size:20px;
+}
+
+.popup-card p{
+    color:#7d8881;
+    font-size:11px;
+    margin:8px 0 20px;
+}
+
+.open-btn,
+.later-btn{
+    width:100%;
+    padding:13px;
+    border-radius:13px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.open-btn{
+    border:0;
+    background:linear-gradient(90deg,#008f46,#00c866);
+    color:#001b0b;
+}
+
+.later-btn{
+    margin-top:10px;
+    border:1px solid #29382f;
+    background:#101510;
+    color:#849087;
+}
+
+/* TOAST */
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:22px;
+    transform:translate(-50%,110px);
+    background:#111713;
+    border:1px solid #304137;
+    padding:11px 16px;
+    border-radius:12px;
+    font-size:11px;
+    transition:.3s;
+    z-index:100;
+    white-space:nowrap;
+}
+
+.toast.show{
+    transform:translate(-50%,0);
+}
+
+/* LOADING */
+.loading{
+    position:fixed;
+    inset:0;
+    background:#020403;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    z-index:200;
+    transition:.5s;
+}
+
+.loading.hide{
+    opacity:0;
+    pointer-events:none;
+}
+
+.loading-logo{
+    width:72px;
+    height:72px;
+    border-radius:50%;
+    overflow:hidden;
+    border:1px solid #00e676;
+    box-shadow:0 0 30px #00e67622;
+}
+
+.loading-logo img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.loading h2{
+    margin-top:16px;
+    letter-spacing:2px;
+    font-size:19px;
+}
+
+.loading-line{
+    width:170px;
+    height:3px;
+    background:#1a211c;
+    margin-top:17px;
+    border-radius:5px;
+    overflow:hidden;
+}
+
+.loading-progress{
+    width:0;
+    height:100%;
+    background:#00e676;
+    animation:loading 1.4s forwards;
+}
+
+@keyframes loading{
+    to{width:100%}
+}
+
+/* ===== LIVE EARTH / SERVER NETWORK ===== */
+.live-network{
+    position:fixed;
+    width:270px;
+    height:270px;
+    left:50%;
+    top:37%;
+    transform:translate(-50%,-50%);
+    z-index:-1;
+    pointer-events:none;
+    opacity:.72;
+}
+.earth{
+    position:absolute;
+    inset:42px;
+    border-radius:50%;
+    background:
+      radial-gradient(circle at 35% 30%,#123f28 0 7%,transparent 8%),
+      radial-gradient(circle at 62% 45%,#0a321e 0 10%,transparent 11%),
+      radial-gradient(circle at 43% 68%,#0b4427 0 9%,transparent 10%),
+      radial-gradient(circle,#03150c 0 58%,#021008 72%,transparent 73%);
+    border:1px solid #00e67655;
+    box-shadow:0 0 35px #00e67622,inset -20px -10px 35px #000c;
+    animation:earthFloat 5s ease-in-out infinite;
+    overflow:hidden;
+}
+.earth:before,.earth:after{
+    content:"";
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:1px solid #00e67628;
+}
+.earth:after{inset:16px;border-style:dashed;animation:earthSpin 10s linear infinite}
+.earth-grid{
+    position:absolute;
+    inset:0;
+    border-radius:50%;
+    background:
+      repeating-linear-gradient(90deg,transparent 0 18px,#00e67618 19px 20px),
+      repeating-linear-gradient(0deg,transparent 0 18px,#00e67612 19px 20px);
+    transform:perspective(180px) rotateY(55deg);
+    animation:gridMove 4s linear infinite;
+}
+.route{
+    position:absolute;
+    height:1px;
+    background:linear-gradient(90deg,transparent,#00e676,#8affbd,transparent);
+    transform-origin:left center;
+    box-shadow:0 0 7px #00e676;
+    animation:routeTravel 2.2s linear infinite;
+}
+.route.r1{width:135px;left:35px;top:108px;transform:rotate(-19deg)}
+.route.r2{width:125px;left:92px;top:148px;transform:rotate(24deg);animation-delay:.6s}
+.route.r3{width:105px;left:74px;top:75px;transform:rotate(34deg);animation-delay:1.1s}
+.route.r4{width:145px;left:25px;top:158px;transform:rotate(-8deg);animation-delay:1.6s}
+.net-node{
+    position:absolute;width:7px;height:7px;border-radius:50%;
+    background:#00e676;box-shadow:0 0 14px #00e676;
+    animation:nodeLive 1.4s infinite alternate;
+}
+.net-node.a{left:32px;top:105px}.net-node.b{right:34px;top:72px;animation-delay:.3s}
+.net-node.c{right:52px;bottom:62px;animation-delay:.7s}.net-node.d{left:52px;bottom:50px;animation-delay:1s}
+.network-label{
+    position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);
+    font-size:8px;letter-spacing:2px;color:#00e676aa;white-space:nowrap;
+}
+body.is-connected .live-network{opacity:1}
+body.is-connected .earth{box-shadow:0 0 60px #00e67635,inset -20px -10px 35px #000c}
+body.is-connected .route{animation-duration:1.1s}
+body.is-disconnecting .live-network{animation:networkShutdown .65s ease}
+@keyframes earthFloat{50%{transform:translateY(-6px) scale(1.025)}}
+@keyframes earthSpin{to{transform:rotate(360deg)}}
+@keyframes gridMove{to{transform:perspective(180px) rotateY(55deg) translateX(20px)}}
+@keyframes routeTravel{0%{opacity:.1;filter:brightness(.7)}40%{opacity:1;filter:brightness(1.8)}100%{opacity:.1;filter:brightness(.7)}}
+@keyframes nodeLive{to{transform:scale(1.8);opacity:.35}}
+@keyframes networkShutdown{50%{transform:translate(-50%,-50%) scale(1.12);filter:brightness(2)}}
+.connect-circle.off-state{
+    border-color:#ef1b1b;
+    box-shadow:0 0 48px #ef1b1b22,inset 0 0 45px #ef1b1b10;
+}
+.connect-circle.off-state .connect-inner{border-color:#ef1b1b;background:radial-gradient(circle,#321010,#070202 70%)}
+.connect-circle.off-state .power-symbol{border-color:#ff4242;border-top-color:transparent}
+.connect-circle.off-state .power-symbol:before{background:#ff4242}
+.server.switching{animation:serverSwitch .65s ease;border-color:#00e676;box-shadow:0 0 25px #00e67620}
+@keyframes serverSwitch{25%{transform:scale(.97) rotate(-1deg);filter:brightness(1.7)}65%{transform:scale(1.02) rotate(1deg)}100%{transform:scale(1)}}
+.popup-card.ready{animation:readyPopup .65s cubic-bezier(.2,.8,.2,1)}
+@keyframes readyPopup{0%{opacity:0;transform:scale(.7) translateY(30px);filter:brightness(2)}60%{transform:scale(1.04) translateY(-3px)}100%{opacity:1;transform:scale(1) translateY(0);filter:brightness(1)}}
+.ready-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid #00e67655;border-radius:20px;color:#00e676;font-size:9px;letter-spacing:1px;margin-top:12px;background:#00e6760c}
+.ready-badge i{width:6px;height:6px;border-radius:50%;background:#00e676;box-shadow:0 0 8px #00e676}
+
+</style>
+</head>
+
+<body>
+
+<div class="server-grid"></div>
+<div class="server-glow"></div>
+
+<!-- LIVE EARTH SERVER NETWORK -->
+<div class="live-network" aria-hidden="true">
+    <div class="earth"><div class="earth-grid"></div></div>
+    <div class="route r1"></div><div class="route r2"></div>
+    <div class="route r3"></div><div class="route r4"></div>
+    <span class="net-node a"></span><span class="net-node b"></span>
+    <span class="net-node c"></span><span class="net-node d"></span>
+    <div class="network-label">LIVE SERVER NETWORK</div>
+</div>
+
+<div class="node n1"></div>
+<div class="node n2"></div>
+<div class="node n3"></div>
+<div class="node n4"></div>
+<div class="node n5"></div>
+
+<!-- =================================================
+     CUPCUT LOGO:
+     YAHAN APNA DIRECT IMAGE URL PASTE KARO
+     ================================================= -->
+<script>
+const CAPCUT_LOGO_URL = "https://i.postimg.cc/fRWmxwQc/file-00000000733c82089c5ab97c97c0f531.png";
+
+/*
+Example:
+const CAPCUT_LOGO_URL = "https://i.postimg.cc/fRWmxwQc/file-00000000733c82089c5ab97c97c0f531.png";
+*/
+</script>
+
+<!-- LOADING -->
+<div class="loading" id="loading">
+    <div class="loading-logo">
+        <img id="loadingLogo" alt="CUPCUT">
+    </div>
+    <h2>CUPCUT VPN</h2>
+    <div class="loading-line">
+        <div class="loading-progress"></div>
+    </div>
+</div>
+
+<div class="app">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="brand">
+            <div class="logo">
+                <img id="mainLogo" alt="CUPCUT">
+            </div>
+
+            <div>
+                <h1>CUPCUT VPN</h1>
+                <p>Secure • Fast • Private</p>
+            </div>
+        </div>
+
+        <button class="menu" onclick="openSettings()">⋮</button>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status" id="status">
+        <div class="status-pill">
+            <span class="status-dot"></span>
+            <span id="statusText">DISCONNECTED</span>
+        </div>
+    </div>
+
+    <!-- CONNECT -->
+    <div class="connect-area">
+
+        <button class="connect-circle" id="connectButton">
+
+            <div class="connect-inner">
+
+                <div class="power-symbol"></div>
+
+                <div class="tap" id="connectText">
+                    TAP 2 TIMES
+                </div>
+
+                <div class="tap-sub" id="connectSub">
+                    Double tap to connect
+                </div>
+
+            </div>
+
+        </button>
+
+    </div>
+
+    <div class="tap-count" id="tapCounter">
+        2 taps = ON • 3 taps = OFF
+    </div>
+
+    <!-- SERVER -->
+    <div class="title">Selected Server</div>
+
+    <div class="server" onclick="openServers()">
+
+        <div class="server-left">
+
+            <div class="flag" id="currentFlag">🇺🇸</div>
+
+            <div>
+                <div class="server-name" id="currentServer">
+                    United States
+                </div>
+
+                <div class="server-sub" id="currentSub">
+                    New York • Fast Server
+                </div>
+            </div>
+
+        </div>
+
+        <div class="arrow">›</div>
+
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+
+        <div class="stat">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-value" id="ping">-- ms</div>
+            <div class="stat-label">PING</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">↓</div>
+            <div class="stat-value" id="download">0 KB/s</div>
+            <div class="stat-label">DOWNLOAD</div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-icon">↑</div>
+            <div class="stat-value" id="upload">0 KB/s</div>
+            <div class="stat-label">UPLOAD</div>
+        </div>
+
+    </div>
+
+    <!-- INFO -->
+    <div class="info">
+
+        <div class="row">
+            <span>Protection</span>
+            <span id="protection">Inactive</span>
+        </div>
+
+        <div class="row">
+            <span>Connection</span>
+            <span id="connection">Not connected</span>
+        </div>
+
+        <div class="row">
+            <span>Protocol</span>
+            <span>Secure VPN</span>
+        </div>
+
+        <div class="row">
+            <span>Session</span>
+            <span id="session">00:00:00</span>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SERVER MODAL -->
+<div class="modal" id="serverModal">
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+            <h2>Select Server</h2>
+            <button class="close" onclick="closeServers()">×</button>
+        </div>
+
+        <div id="serverList"></div>
+
+    </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings-modal" id="settingsModal">
+
+    <div class="settings-box">
+
+        <div class="setting-head">
+            <h2>Settings</h2>
+            <button class="close" onclick="closeSettings()">×</button>
+        </div>
+
+        <div class="setting">
+            <div class="setting-title">Connection Sound</div>
+            <div class="setting-desc">
+                Play sound while connecting and disconnecting.
+            </div>
+            <button class="setting-btn green"
+                    id="soundButton"
+                    onclick="toggleSound()">
+                Sound: ON
+            </button>
+        </div>
+
+        <div class="setting">
+            <div class="setting-title">Notifications</div>
+            <div class="setting-desc">
+                Allow browser notifications when connection status changes.
+            </div>
+            <button class="setting-btn"
+                    onclick="requestNotifications()">
+                Allow Notifications
+            </button>
+        </div>
+
+        <div class="setting">
+            <div class="setting-title">Server Network</div>
+            <div class="setting-desc">
+                26 server locations are available in the selector.
+            </div>
+        </div>
+
+        <div class="setting">
+            <div class="setting-title">About</div>
+            <div class="setting-desc">
+                CUPCUT VPN interface • Secure UI Edition
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- CUPCUT POPUP -->
+<div class="cupcut-popup" id="cupcutPopup">
+
+    <div class="popup-card">
+
+        <div class="popup-logo">
+            <img id="popupLogo" alt="CUPCUT">
+        </div>
+
+        <div class="ready-badge"><i></i> CONNECTION READY</div>
+
+        <h2>Open Your CapCut</h2>
+
+        <p>
+            Your connection is ready.<br>Open CapCut and continue.
+        </p>
+
+        <button class="open-btn" onclick="openCupCut()">
+            OPEN CUPCUT
+        </button>
+
+        <button class="later-btn" onclick="closeCupCutPopup()">
+            MAYBE LATER
+        </button>
+
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+
+/* =================================================
+   LOGO
+   ================================================= */
+
+function setupLogo(){
+
+    const ids=[
+        "mainLogo",
+        "loadingLogo",
+        "popupLogo"
+    ];
+
+    ids.forEach(function(id){
+
+        const img=document.getElementById(id);
+
+        img.src=CAPCUT_LOGO_URL;
+
+        img.onerror=function(){
+            img.style.display="none";
+        };
+
+    });
+}
+
+
+/* =================================================
+   26 SERVERS
+   ================================================= */
+
+const servers=[
+    ["🇺🇸","United States","New York • Fast Server",42],
+    ["🇬🇧","United Kingdom","London • Europe",78],
+    ["🇮🇳","India","Mumbai • Asia",35],
+    ["🇸🇬","Singapore","Singapore • Asia",68],
+    ["🇯🇵","Japan","Tokyo • Asia",105],
+    ["🇦🇪","United Arab Emirates","Dubai • Middle East",92],
+    ["🇩🇪","Germany","Frankfurt • Europe",115],
+    ["🇫🇷","France","Paris • Europe",124],
+    ["🇳🇱","Netherlands","Amsterdam • Europe",118],
+    ["🇨🇦","Canada","Toronto • North America",165],
+    ["🇦🇺","Australia","Sydney • Oceania",190],
+    ["🇰🇷","South Korea","Seoul • Asia",125],
+    ["🇭🇰","Hong Kong","Hong Kong • Asia",83],
+    ["🇹🇷","Turkey","Istanbul • Europe",132],
+    ["🇮🇹","Italy","Milan • Europe",137],
+    ["🇪🇸","Spain","Madrid • Europe",145],
+    ["🇨🇭","Switzerland","Zurich • Europe",130],
+    ["🇸🇪","Sweden","Stockholm • Europe",142],
+    ["🇳🇴","Norway","Oslo • Europe",149],
+    ["🇩🇰","Denmark","Copenhagen • Europe",146],
+    ["🇧🇷","Brazil","Sao Paulo • America",210],
+    ["🇲🇽","Mexico","Mexico City • America",198],
+    ["🇿🇦","South Africa","Johannesburg • Africa",230],
+    ["🇮🇱","Israel","Tel Aviv • Middle East",128],
+    ["🇵🇱","Poland","Warsaw • Europe",139],
+    ["🇳🇿","New Zealand","Auckland • Oceania",205]
+];
+
+function renderServers(){
+
+    const list=document.getElementById("serverList");
+
+    list.innerHTML="";
+
+    servers.forEach(function(server,index){
+
+        const option=document.createElement("div");
+
+        option.className="option"+
+            (index===selectedServerIndex ? " selected":"");
+
+        option.innerHTML=`
+            <div class="flag">${server[0]}</div>
+
+            <div class="option-info">
+                <b>${server[1]}</b>
+                <small>${server[2]}</small>
+            </div>
+
+            <div class="option-ping">
+                ${server[3]} ms
+            </div>
+        `;
+
+        option.onclick=function(){
+            selectServer(server,index,option);
+        };
+
+        list.appendChild(option);
+
+    });
+}
+
+
+/* =================================================
+   VPN STATE
+   ================================================= */
+
+let connected=false;
+let seconds=0;
+let timer=null;
+let statsTimer=null;
+let selectedPing=42;
+let selectedServerIndex=0;
+let soundEnabled=true;
+
+
+/* =================================================
+   DOUBLE TAP = CONNECT
+   TRIPLE TAP = DISCONNECT
+   ================================================= */
+
+const connectButton=
+    document.getElementById("connectButton");
+
+let taps=[];
+let tapTimer=null;
+
+connectButton.addEventListener("click",function(){
+
+    taps.push(Date.now());
+
+    if(taps.length>3){
+        taps.shift();
+    }
+
+    clearTimeout(tapTimer);
+
+    tapTimer=setTimeout(function(){
+
+        const count=taps.length;
+
+        taps=[];
+
+        if(count===2 && !connected){
+            connectVPN();
+        }
+        else if(count===3 && connected){
+            disconnectVPN();
+        }
+        else if(count===1){
+            showToast("Double tap to connect");
+        }
+        else if(count===2 && connected){
+            showToast("VPN already connected");
+        }
+        else if(count===3 && !connected){
+            showToast("Double tap to connect");
+        }
+        else{
+            showToast("2 taps = ON • 3 taps = OFF");
+        }
+
+    },430);
+
+});
+
+
+/* =================================================
+   SOUND ENGINE
+   ================================================= */
+
+let audioContext=null;
+
+function getAudio(){
+
+    if(!audioContext){
+
+        audioContext=
+            new (window.AudioContext||
+            window.webkitAudioContext)();
+
+    }
+
+    if(audioContext.state==="suspended"){
+        audioContext.resume();
+    }
+
+    return audioContext;
+}
+
+function tone(freq,duration,type="sine",volume=.045){
+
+    if(!soundEnabled) return;
+
+    try{
+
+        const ctx=getAudio();
+
+        const oscillator=ctx.createOscillator();
+        const gain=ctx.createGain();
+
+        oscillator.type=type;
+        oscillator.frequency.value=freq;
+
+        gain.gain.setValueAtTime(
+            volume,
+            ctx.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            .001,
+            ctx.currentTime+duration
+        );
+
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        oscillator.start();
+
+        oscillator.stop(
+            ctx.currentTime+duration
+        );
+
+    }catch(e){}
+
+}
+
+function connectSound(){
+
+    tone(280,.12,"sine",.035);
+
+    setTimeout(()=>{
+        tone(440,.16,"sine",.04);
+    },110);
+
+    setTimeout(()=>{
+        tone(720,.25,"sine",.045);
+    },250);
+
+}
+
+function disconnectSound(){
+
+    tone(650,.13,"sine",.04);
+
+    setTimeout(()=>{
+        tone(390,.16,"sine",.035);
+    },120);
+
+    setTimeout(()=>{
+        tone(220,.24,"sine",.035);
+    },260);
+
+}
+
+
+function readySound(){
+    if(!soundEnabled) return;
+    tone(520,.10,"sine",.03);
+    setTimeout(()=>tone(760,.12,"sine",.035),90);
+    setTimeout(()=>tone(1040,.20,"sine",.04),190);
+}
+
+/* =================================================
+   CONNECT
+   ================================================= */
+
+function connectVPN(){
+
+    document.body.classList.remove("is-disconnecting");
+    document.body.classList.add("is-connecting");
+    document.getElementById("connectButton").classList.remove("off-state");
+    connectSound();
+
+    const button=
+        document.getElementById("connectButton");
+
+    button.classList.add("connecting");
+
+    document.getElementById("connectText").textContent=
+        "CONNECTING";
+
+    document.getElementById("connectSub").textContent=
+        "Securing connection...";
+
+    document.getElementById("statusText").textContent=
+        "CONNECTING";
+
+    showToast("Connecting to server...");
+
+    setTimeout(function(){
+
+        connected=true;
+
+        document.body.classList.remove("is-connecting");
+        document.body.classList.add("is-connected");
+        button.classList.remove("connecting");
+        button.classList.add("active");
+
+        document.getElementById("status")
+            .classList.add("connected");
+
+        document.getElementById("statusText").textContent=
+            "CONNECTED";
+
+        document.getElementById("connectText").textContent=
+            "CONNECTED";
+
+        document.getElementById("connectSub").textContent=
+            "Connection secured";
+
+        document.getElementById("protection").textContent=
+            "Active";
+
+        document.getElementById("connection").textContent=
+            "Secure";
+
+        document.getElementById("tapCounter").textContent=
+            "3 taps = OFF";
+
+        startSession();
+        startSpeed();
+
+        notify("CUPCUT VPN","VPN connected");
+
+        showToast("VPN connected");
+
+        setTimeout(function(){
+
+            const popup=document.getElementById("cupcutPopup");
+            popup.classList.add("show");
+            popup.querySelector(".popup-card").classList.remove("ready");
+            void popup.querySelector(".popup-card").offsetWidth;
+            popup.querySelector(".popup-card").classList.add("ready");
+            readySound();
+
+        },700);
+
+    },1700);
+
+}
+
+
+/* =================================================
+   DISCONNECT
+   ================================================= */
+
+function disconnectVPN(){
+
+    document.body.classList.remove("is-connected");
+    document.body.classList.add("is-disconnecting");
+    disconnectSound();
+
+    connected=false;
+
+    const button=
+        document.getElementById("connectButton");
+
+    button.classList.remove("active");
+    button.classList.remove("connecting");
+    button.classList.add("off-state");
+    setTimeout(()=>document.body.classList.remove("is-disconnecting"),650);
+
+    document.getElementById("status")
+        .classList.remove("connected");
+
+    document.getElementById("statusText").textContent=
+        "DISCONNECTED";
+
+    document.getElementById("connectText").textContent=
+        "TAP 2 TIMES";
+
+    document.getElementById("connectSub").textContent=
+        "Double tap to connect";
+
+    document.getElementById("protection").textContent=
+        "Inactive";
+
+    document.getElementById("connection").textContent=
+        "Not connected";
+
+    document.getElementById("tapCounter").textContent=
+        "2 taps = ON • 3 taps = OFF";
+
+    document.getElementById("ping").textContent=
+        "-- ms";
+
+    document.getElementById("download").textContent=
+        "0 KB/s";
+
+    document.getElementById("upload").textContent=
+        "0 KB/s";
+
+    stopSession();
+
+    clearInterval(statsTimer);
+
+    notify("CUPCUT VPN","VPN disconnected");
+
+    showToast("VPN disconnected");
+
+}
+
+
+/* =================================================
+   SESSION
+   ================================================= */
+
+function startSession(){
+
+    seconds=0;
+
+    clearInterval(timer);
+
+    timer=setInterval(function(){
+
+        seconds++;
+
+        const h=Math.floor(seconds/3600);
+
+        const m=Math.floor(
+            (seconds%3600)/60
+        );
+
+        const s=seconds%60;
+
+        document.getElementById("session").textContent=
+            String(h).padStart(2,"0")+":"+
+            String(m).padStart(2,"0")+":"+
+            String(s).padStart(2,"0");
+
+    },1000);
+
+}
+
+function stopSession(){
+
+    clearInterval(timer);
+
+    seconds=0;
+
+    document.getElementById("session").textContent=
+        "00:00:00";
+
+}
+
+
+/* =================================================
+   LIVE SPEED NUMBERS
+   ================================================= */
+
+function startSpeed(){
+
+    clearInterval(statsTimer);
+
+    function update(){
+
+        if(!connected)return;
+
+        const ping=
+            selectedPing+
+            Math.floor(Math.random()*13)-6;
+
+        const download=
+            Math.floor(Math.random()*9500)+500;
+
+        const upload=
+            Math.floor(Math.random()*4500)+200;
+
+        document.getElementById("ping").textContent=
+            Math.max(1,ping)+" ms";
+
+        document.getElementById("download").textContent=
+            download+" KB/s";
+
+        document.getElementById("upload").textContent=
+            upload+" KB/s";
+
+    }
+
+    update();
+
+    statsTimer=setInterval(update,1200);
+
+}
+
+
+/* =================================================
+   SERVER SELECTOR
+   ================================================= */
+
+function openServers(){
+
+    document.getElementById("serverModal")
+        .classList.add("show");
+
+}
+
+function closeServers(){
+
+    document.getElementById("serverModal")
+        .classList.remove("show");
+
+}
+
+function selectServer(server,index,element){
+
+    const serverCard=document.querySelector(".server");
+    serverCard.classList.remove("switching");
+    void serverCard.offsetWidth;
+    serverCard.classList.add("switching");
+    tone(360,.10,"triangle",.025);
+
+    document.getElementById("currentFlag").textContent=
+        server[0];
+
+    document.getElementById("currentServer").textContent=
+        server[1];
+
+    document.getElementById("currentSub").textContent=
+        server[2];
+
+    selectedPing=server[3];
+    selectedServerIndex=index;
+
+    document.querySelectorAll(".option")
+        .forEach(function(item){
+            item.classList.remove("selected");
+        });
+
+    element.classList.add("selected");
+
+    closeServers();
+
+    showToast(server[1]+" selected");
+
+}
+
+
+/* =================================================
+   SETTINGS
+   ================================================= */
+
+function openSettings(){
+
+    document.getElementById("settingsModal")
+        .classList.add("show");
+
+}
+
+function closeSettings(){
+
+    document.getElementById("settingsModal")
+        .classList.remove("show");
+
+}
+
+function toggleSound(){
+
+    soundEnabled=!soundEnabled;
+
+    const button=
+        document.getElementById("soundButton");
+
+    button.textContent=
+        soundEnabled ?
+        "Sound: ON" :
+        "Sound: OFF";
+
+    button.classList.toggle(
+        "green",
+        soundEnabled
+    );
+
+    if(soundEnabled){
+        tone(600,.15);
+    }
+
+}
+
+
+/* =================================================
+   NOTIFICATION PERMISSION
+   ================================================= */
+
+async function requestNotifications(){
+
+    if(!("Notification" in window)){
+
+        showToast("Notifications not supported");
+
+        return;
+    }
+
+    try{
+
+        const result=
+            await Notification.requestPermission();
+
+        if(result==="granted"){
+
+            showToast("Notifications enabled");
+
+            notify(
+                "CUPCUT VPN",
+                "Notifications enabled"
+            );
+
+        }else{
+
+            showToast("Notification permission denied");
+
+        }
+
+    }catch(e){
+
+        showToast("Permission unavailable");
+
+    }
+
+}
+
+function notify(title,message){
+
+    if(
+        "Notification" in window &&
+        Notification.permission==="granted"
+    ){
+
+        new Notification(title,{
+            body:message
+        });
+
+    }
+
+}
+
+
+/* =================================================
+   CUPCUT POPUP
+   ================================================= */
+
+function closeCupCutPopup(){
+
+    document.getElementById("cupcutPopup")
+        .classList.remove("show");
+
+}
+
+function openCupCut(){
+
+    closeCupCutPopup();
+
+    showToast("Opening CupCut...");
+
+    setTimeout(function(){
+
+        window.location.href=
+        "intent://#Intent;scheme=cupcut;package=com.lemon.lvoverseas;end";
+
+    },300);
+
+}
+
+
+/* =================================================
+   TOAST
+   ================================================= */
+
+function showToast(message){
+
+    const toast=
+        document.getElementById("toast");
+
+    toast.textContent=message;
+
+    toast.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer=setTimeout(function(){
+
+        toast.classList.remove("show");
+
+    },2200);
+
+}
+
+
+/* =================================================
+   CLOSE MODALS
+   ================================================= */
+
+document.getElementById("serverModal")
+.addEventListener("click",function(e){
+
+    if(e.target===this){
+        closeServers();
+    }
+
+});
+
+document.getElementById("settingsModal")
+.addEventListener("click",function(e){
+
+    if(e.target===this){
+        closeSettings();
+    }
+
+});
+
+document.getElementById("cupcutPopup")
+.addEventListener("click",function(e){
+
+    if(e.target===this){
+        closeCupCutPopup();
+    }
+
+});
+
+
+/* =================================================
+   START
+   ================================================= */
+
+setupLogo();
+renderServers();
+
+window.addEventListener("load",function(){
+
+    setTimeout(function(){
+
+        document.getElementById("loading")
+            .classList.add("hide");
+
+    },1600);
+
+});
+
+</script>
+
+</body>
+</html>
